@@ -53,7 +53,7 @@ class SentimentAnalysis(nn.Module):
   
   score = self.network(torch.tensor(tokenize(text)['input_ids']).unsqueeze(dim = 0)).item()
 
-  if score > 0.1:
+  if score > 0.2:
    return {'sentiment':'POSITIVE', 'score':score}
   
   else:
