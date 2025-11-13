@@ -51,7 +51,7 @@ class SentimentAnalysis(nn.Module):
   def tokenize(text):
    return tokenizer(text, padding = "max_length", truncation = True)
   
-  return self.network(torch.tensor(tokenize(text)['input_ids']).unsqueeze(dim = 0))
+  return self.network(torch.tensor(tokenize(text)['input_ids']).unsqueeze(dim = 0)).item() > 0.1
 
 
 model = SentimentAnalysis()
