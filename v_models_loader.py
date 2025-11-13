@@ -5,10 +5,10 @@ import importlib.util
 
 def use_model(model, device = 'cpu'):
  try:
+  os.mkdir(model)
+  
   print('downloading model ...')
 
-  os.mkdir(model)
- 
   base_url = f'https://raw.githubusercontent.com/virajsharma2000/v-models-torch/refs/heads/main/{model}/'
 
   safetensors = requests.get(base_url + 'model.safetensors').text
@@ -55,3 +55,7 @@ def use_model(model, device = 'cpu'):
   
   return model
  
+
+model = use_model('sentiment-analysis-model')
+
+print(model('I love you so much, cannot tell you how much'))
