@@ -55,7 +55,3 @@ def use_model(model, device = 'cpu'):
   
   return model
  
-
-model = use_model('sentiment-analysis-model')
-
-print(model('I am not feeling well today'))
