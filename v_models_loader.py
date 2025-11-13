@@ -11,15 +11,11 @@ def use_model(model, device = 'cpu'):
 
   base_url = f'https://raw.githubusercontent.com/virajsharma2000/v-models-torch/refs/heads/main/{model}/'
 
-  safetensors = requests.get(base_url + 'model.safetensors').text
-  weights_bin = requests.get(base_url + 'model_weights.bin').text
-  model_architechture = requests.get(base_url + model.replace('-', '_') + '.py').text
-
-  with open(model + '/' + 'model.safetensors', 'wb') as file:
-   file.write(safetensors.encode())
+  weights_bin = requests.get(base_url + 'model_weights.bin').content
+  model_architechture = requests.get(base_url + model + '.py').text
 
   with open(model + '/' + 'model_weights.bin', 'wb') as file:
-   file.write(weights_bin.encode())
+   file.write(weights_bin)
 
   with open(model + '/' + model + '.py', 'w') as file:
    file.write(model_architechture)
@@ -55,3 +51,7 @@ def use_model(model, device = 'cpu'):
   
   return model
  
+ 
+model = use_model('sentiment-analysis-model')
+
+print(model('I love you'))
