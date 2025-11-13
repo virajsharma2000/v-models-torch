@@ -1,10 +1,6 @@
 import torch
-import random
-from datasets import Dataset
-from datasets import load_dataset
-from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer
+from transformers import AutoTokenizer
 import torch.nn as nn
-import torch.optim as optim
 
 class PooledMHAWrapper(nn.Module):
  def __init__(self):
