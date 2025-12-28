@@ -1,63 +1,43 @@
-import torch
 from transformers import AutoTokenizer
+from datasets import load_dataset
 import torch.nn as nn
+import torch.optim as optim
+import torch
 
-class PooledMHAWrapper(nn.Module):
- def __init__(self):
-  super().__init__()
-  self.mha = nn.MultiheadAttention(embed_dim = 100, num_heads = 10, batch_first = True)
-
- def forward(self, x):
-   attn, _ = self.mha(x, x, x)
-   pooled_output = attn.mean(dim = 1)
-
-   return pooled_output
+d_model = 442
 
 class SentimentAnalysis(nn.Module):
  def __init__(self):
   super().__init__()
-  self.network = nn.Sequential(
-   nn.Embedding(num_embeddings = 100000, embedding_dim = 100),
-   PooledMHAWrapper(),
-   nn.Linear(in_features = 100, out_features = 200),
-   nn.LeakyReLU(),
-   nn.Linear(in_features = 200, out_features = 400),
-   nn.LeakyReLU(),
-   nn.Linear(in_features = 400, out_features = 800),
-   nn.LeakyReLU(),
-   nn.Linear(in_features = 800, out_features = 400),
-   nn.LeakyReLU(),
-   nn.Linear(in_features = 400, out_features = 200),
-   nn.LeakyReLU(),
-   nn.Linear(in_features = 200, out_features = 100),
-   nn.LeakyReLU(),
-   nn.Linear(in_features = 100, out_features = 50),
-   nn.LeakyReLU(),
-   nn.Linear(in_features = 50, out_features = 25),
-   nn.LeakyReLU(),
-   nn.Linear(in_features = 25, out_features = 12),
-   nn.LeakyReLU(),
-   nn.Linear(in_features = 12, out_features = 6),
-   nn.LeakyReLU(),
-   nn.Linear(in_features = 6, out_features = 3),
-   nn.LeakyReLU(),
-   nn.Linear(in_features = 3, out_features = 1),
-   nn.Sigmoid()
+  self.embed = nn.Embedding(embedding_dim = d_model, num_embeddings = 1000000)
+  self.attention = nn.MultiheadAttention(embed_dim = d_model, num_heads = 2, batch_first = True)
+  self.layer_norm = nn.LayerNorm(d_model)
+  self.ffn = nn.Sequential(
+   nn.Linear(d_model, d_model * 2),
+   nn.GELU(),
+   nn.Linear(d_model * 2, d_model)
   )
+  self.gelu = nn.GELU()
+  self.fc2 = nn.Linear(442, 1)
+  self.sigmoid = nn.Sigmoid()
 
- def forward(self, text):
-  tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
-
-  def tokenize(text):
-   return tokenizer(text, padding = "max_length", truncation = True)
+ def forward(self, x, attention_mask):
+  y = self.embed(x)
   
-  score = self.network(torch.tensor(tokenize(text)['input_ids']).unsqueeze(dim = 0)).item()
-
-  if score > 0.2:
-   return {'sentiment':'POSITIVE', 'score':score}
+  y = self.layer_norm(y)
+  y = y + self.attention(y, y, y, key_padding_mask = attention_mask == 0)[0]
+  y = self.ffn(y) + y
+ 
+  y = self.layer_norm(y)
+  y = y + self.attention(y, y, y, key_padding_mask = attention_mask == 0)[0]
+  y = self.ffn(y) + y
   
-  else:
-   return {'sentiment':'NEGATIVE', 'score':score}
+  y = self.layer_norm(y)
+  y = y + self.attention(y, y, y, key_padding_mask = attention_mask == 0)[0]
+  y = self.ffn(y) + y
 
-
-model = SentimentAnalysis()
+  y = self.sigmoid(self.fc2(self.gelu(y))).mean(dim = 1)
+  
+  return y.squeeze()
+ 
+ 

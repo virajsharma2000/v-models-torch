@@ -3,7 +3,7 @@ import os
 import torch
 import importlib.util
 
-def use_model(model, device = 'cpu'):
+def load_model(model, device = 'cpu'):
  try:
   os.mkdir(model)
   
@@ -20,38 +20,25 @@ def use_model(model, device = 'cpu'):
   with open(model + '/' + model + '.py', 'w') as file:
    file.write(model_architechture)
 
-  state_dict = torch.load(model + '/' + 'model_weights.bin')
-  model_architechture_filepath = model + '/' + model + '.py'
-
-  module_spec = importlib.util.spec_from_file_location("model_architecture", model_architechture_filepath)
-  module = importlib.util.module_from_spec(module_spec)
-  module_spec.loader.exec_module(module)
-  
-  model = module.model
-  model.to(device)
-  model.eval()
-
-  model.load_state_dict(state_dict)
-  
-  return model
- 
  except FileExistsError:
-  state_dict = torch.load(model + '/' + 'model_weights.bin')
-  model_architechture_filepath = model + '/' + model + '.py'
-
-  module_spec = importlib.util.spec_from_file_location("model_architecture", model_architechture_filepath)
-  module = importlib.util.module_from_spec(module_spec)
-  module_spec.loader.exec_module(module)
-  
-  model = module.model
-  model.to(device)
-  model.eval()
-
-  model.load_state_dict(state_dict)
-  
-  return model
+  pass
  
- 
-model = use_model('sentiment-analysis-model')
+ state_dict = torch.load(model + '/' + 'model_weights.bin')
+ model_architechture_filepath = model + '/' + model + '.py'
 
-print(model('I love you'))
+ module_spec = importlib.util.spec_from_file_location("model_architecture", model_architechture_filepath)
+ module = importlib.util.module_from_spec(module_spec)
+ module_spec.loader.exec_module(module)
+  
+ model = module.model
+ model.to(device)
+ model.eval()
+
+ model.load_state_dict(state_dict)
+  
+ return model
+
+
+model = load_model('sentiment-analysis-model')
+
+print(model('very bad'))
